@@ -1,7 +1,6 @@
 #This file creates the data for the shiny app
 
 #packages
-library(dplyr)
 library(plyr)
 library(dplyr)
 library(ggvis)
@@ -12,47 +11,51 @@ wvs <- read.csv(file = "wvs_20141208.csv", stringsAsFactors = FALSE)
 
 list <- read.csv(file = "WVSw6_list.csv", stringsAsFactors = FALSE)
 wvs <- merge(wvs, list, by = c("cid"), all.x = TRUE)
+wvs <- wvs %>%
+        filter(is.na(country) == FALSE)
 
-countries <- unique(wvs$country)
+wvs$country.year <- paste(wvs$country, wvs$survey.year, sep = " - ")
+countries <- unique(wvs$country.year)
 
 #loop through countries, run model and create 
 
-for (c in 1:leng(countries)) {
+for (c in 1:length(countries)) {
         d <- wvs %>%
-                filter(wvs$country == countries[c])
+                filter(wvs$country.year == countries[c])
         #model
-        m1 <- glm(conf_govd ~ as.factor(sex) + age + as.factor(uni) + as.factor(hs) + 
+        m <- glm(conf_govd ~ as.factor(sex) + age + as.factor(uni) + as.factor(hs) + 
                           income + as.factor(unemp) + as.factor(polinterestd), 
-                                data = wvs, family = "binomial")
+                                data = d, family = "binomial")
         
         #build data set of predicted values
-        p <- data.frame(matrix(nrow = , ncol = 8))
-        colnames(p) <- c("country", "sex", "age_2", "uni", "hs", "income", "unemp", "polinterestd")
+        p <- data.frame(matrix(nrow = 174, ncol = 8))
+        colnames(p) <- c("countryyr", "sex", "age", "uni", "hs", "income", "unemp", "polinterestd")
+        p$countryyr <- d[1, "country.year"] 
+        p$sex <- 2
+        p$age <- seq(from = 18, to = 75, by = 1)
+        p$uni <- rep(c(1, 0, 0), each = 58)
+        p$hs <- rep(c(0, 1, 0), each = 58)
+        p$income <- mean(d$income, na.rm = TRUE)
+        p$unemp <- 0
+        p$polinterestd <- ifelse(mean(d$polinterestd, na.rm = TRUE) > 0.5, 1, 0)
+        p$category <- rep(c("College", "High School", "> High School"), each = 58)
         
+        p2 <- cbind(p, predict(m, newdata = p, type = "link", se = TRUE))
+        
+        p2 <- within(p2, {
+                predictedprob <- plogis(fit)
+                LL <- plogis(fit - (1.96 * se.fit))
+                UL <- plogis(fit + (1.96 * se.fit))
+        })
+                
         if(c == 1) {
-                data_predict <- p
-        } else data_predict <- rbind(data_predict, p)
+                data_predict <- p2
+        } else data_predict <- rbind(data_predict, p2)
         
 }
 
-test <- data.frame(matrix(nrow = 174, ncol = 7))
-colnames(test) <- c("sex", "age_2", "uni", "hs", "income", "unemp", "polinterestd")
-test$sex <- 2
-test$age_2 <- seq(from = 18, to = 75, by = 1)
-test$uni <- rep(c(1,0,0), each = 58)
-test$hs <- rep(c(0, 1, 0), each = 58)
-test$income <- mean(china$income, na.rm = TRUE)
-test$unemp <- 0
-test$polinterestd <- 0
-test$category <- rep(c("College", "HS", "Low Edu"), each = 58)
+write.csv(data_predict, file = "20141209_data_forapp.csv")
 
-newdata3 <- cbind(test, predict(m, newdata = test, type = "link",
-                                se = TRUE))
-newdata3 <- within(newdata3, {
-        PredictedProb <- plogis(fit)
-        LL <- plogis(fit - (1.96 * se.fit))
-        UL <- plogis(fit + (1.96 * se.fit))
-})
 
 p <- ggplot(newdata3, aes(x = age_2, y = PredictedProb)) + geom_ribbon(aes(ymin = LL, ymax = UL, fill = category), alpha = 0.2) + geom_line(aes(color = category), size = 1.5) + labs(title = "China")
 p

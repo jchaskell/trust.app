@@ -11,9 +11,16 @@ Put write up here
 ## Inputs and Outputs
 
 ```{r, echo=FALSE}
-#Setup plus graph 
-library(ggvis)
-setwd("C:/Dropbox/Projects/Dissertation/WVS/trust.app")
+# #Setup plus trying to create graph in graph 
+# library(ggvis)
+# setwd("C:/Dropbox/Projects/Dissertation/WVS/trust.app")
+# data.comp <- read.csv(file = "20141209_data_forapp.csv", stringsAsFactors = FALSE)
+# # m <- subset(data.comp, countryyr == "Malaysia - 2011")
+# # 
+# 
+# # p2 <- ggplot(m, aes(x = age, y = predictedprob)) + geom_ribbon(aes(ymin = LL, ymax = UL, fill = category), alpha = 0.2) + geom_line(aes(colour = category), size = 1.5)
+# 
+
 
 ```
 
@@ -22,43 +29,39 @@ You can embed Shiny inputs and outputs in your document. Outputs are automatical
 
 ```{r, echo=FALSE}
 rm(list = ls())
-
 library(shiny)
 library(ggvis)
-
-#input panel to create subset
-inputPanel(
-        selectInput("countryyr", label = "Choose a country:",choices = c("Algeria - 2014", "Azerbaijan - 2011/2012", "Armenia - 2011 ",  "Belarus - 2011", "China - 2012", "Palestine - 2013", "Iraq - 2013", "Kazakhstan - 2011", "Jordan - 2014", "Kuwait - 2013", "Libya - 2013", "Malaysia - 2011", "Morocco - 2011", "Nigeria - 2011", "Qatar - 2010", "Russia - 2011", "Rwanda - 2012", "Singapore - 2012", "Zimbabwe - 2011", "Egypt - 2012", "Uzbekistan - 2011", "Yemen - 2013"), selected = "Algeria - 2014"),
-                ))
-
-mainPanel(ggvis_output("trust_plot"))
-
-shinyServer(function(input, output, session) {
-        data.comp <- read.csv(file = "20141209_data_forapp.csv", stringsAsFactors = FALSE)
-        datasetInput <- reactive({
-                selection <- switch(input$countryyr,
-                                   "Algeria - 2014" = "Algeria - 2014", "Azerbaijan - 2011/2012" = "Azerbaijan - 2011/2012", "Armenia - 2011 ",  "Belarus - 2011", "China - 2012", "Palestine - 2013", "Iraq - 2013", "Kazakhstan - 2011", "Jordan - 2014", "Kuwait - 2013", "Libya - 2013", "Malaysia - 2011", "Morocco - 2011", "Nigeria - 2011", "Qatar - 2010", "Russia - 2011", "Rwanda - 2012", "Singapore - 2012", "Zimbabwe - 2011", "Egypt - 2012", "Uzbekistan - 2011", "Yemen - 2013")
-                subset(dataset, countryyr == selection)                    
-        })
-        gv <- reactive( {
-                
-                ggvis(datasetInput(),
-                      props(x = ~age, y = ~conf_gov, stroke = ~category)  %>% layer_lines())
-                
-        })
+setwd("C:/Dropbox/Projects/Dissertation/WVS/trust.app")
+#shinyApp(
+        ui = fluidPage(
+                inputPanel(selectInput("cyr", label = "Choose a country:",choices = c("Algeria - 2014", "Azerbaijan - 2011/2012", "Armenia - 2011",  "Belarus - 2011", "China - 2012", "Palestine - 2013", "Iraq - 2013", "Kazakhstan - 2011", "Jordan - 2014", "Kuwait - 2013", "Libya - 2013", "Malaysia - 2011", "Morocco - 2011", "Nigeria - 2011", "Qatar - 2010", "Russia - 2011", "Rwanda - 2012", "Singapore - 2012", "Zimbabwe - 2011", "Egypt - 2012", "Uzbekistan - 2011", "Yemen - 2013"), selected = "Algeria - 2014"),
         
-}
-        )
+                ggvisOutput("trust_plot")
+        ))#,
 
-#example http://stackoverflow.com/questions/22312767/shiny-ggvis-reactivity-to-subset-plot-data
+        server = function(input, output) {
+                load("wvs.app.RData")
+                datasetInput <- reactive({
+                        selection <- switch(input$yr,
+                                   "Algeria - 2014" = "Algeria - 2014", "Azerbaijan - 2011/2012" = "Azerbaijan - 2011/2012", "Armenia - 2011" = "Armenia - 2011",  "Belarus - 2011" = "Belarus - 2011", "China - 2012" = "China - 2012", "Palestine - 2013" = "Palestine - 2013", "Iraq - 2013" = "Iraq - 2013", "Kazakhstan - 2011" = "Kazakhstan - 2011", "Jordan - 2014" = "Jordan - 2014", "Kuwait - 2013" = "Kuwait - 2013", "Libya - 2013" = "Libya - 2013", "Malaysia - 2011" = "Malaysia - 2011", "Morocco - 2011" = "Morocco - 2011", "Nigeria - 2011" = "Nigeria - 2011", "Qatar - 2010" = "Qatar - 2010", "Russia - 2011" = "Russia - 2011", "Rwanda - 2012" = "Rwanda - 2012", "Singapore - 2012" = "Singapore - 2012", "Zimbabwe - 2011" = "Zimbabwe - 2011", "Egypt - 2012" = "Egypt - 2012", "Uzbekistan - 2011" = "Uzbekistan - 2011", "Yemen - 2013" = "Yemen - 2013")
+                        subset(data_predict, countryyr == selection)         
+                
+                })
+        
+        gv <- reactive({
+                ggvis(datasetInput(), props(x = ~age, y = ~predictedprob))  %>% 
+                                layer_lines()
+#                               layer_lines(stroke= ~category)  #%>% 
+#                               #layer_ribbons(y = ~LL, y2 = ~UL))
+                
+        })
+        output$controls <- renderControls(gv)
+        observe_ggvis(gv, "trust_plot")      
+        }
+#)
 
 
 ```
-
-## Embedded Application
-
-It's also possible to embed an entire Shiny application within an R Markdown document using the `shinyAppDir` function. This example embeds a Shiny application located in another directory:
-
 
 
 

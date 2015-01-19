@@ -55,7 +55,4 @@ for (c in 1:length(countries)) {
 }
 
 write.csv(data_predict, file = "20141209_data_forapp.csv")
-
-
-p <- ggplot(newdata3, aes(x = age_2, y = PredictedProb)) + geom_ribbon(aes(ymin = LL, ymax = UL, fill = category), alpha = 0.2) + geom_line(aes(color = category), size = 1.5) + labs(title = "China")
-p
+save(data_predict, file = "wvs.app.RData")

@@ -28,23 +28,76 @@ Put write up here
 You can embed Shiny inputs and outputs in your document. Outputs are automatically updated whenever inputs change.  This demonstrates how a standard R plot can be made interactive by wrapping it in the Shiny `renderPlot` function. The `selectInput` and `sliderInput` functions create the input widgets used to drive the plot.
 
 ```{r, echo=FALSE}
+# rm(list = ls())
+# library(shiny)
+# library(ggvis)
+# setwd("C:/Dropbox/Projects/Dissertation/WVS/trust.app")
+# #shinyApp(
+#         ui = fluidPage(
+#                 inputPanel(selectInput("cyr", label = "Choose a country:",choices = c("Algeria - 2014", "Azerbaijan - 2011/2012", "Armenia - 2011",  "Belarus - 2011", "China - 2012", "Palestine - 2013", "Iraq - 2013", "Kazakhstan - 2011", "Jordan - 2014", "Kuwait - 2013", "Libya - 2013", "Malaysia - 2011", "Morocco - 2011", "Nigeria - 2011", "Qatar - 2010", "Russia - 2011", "Rwanda - 2012", "Singapore - 2012", "Zimbabwe - 2011", "Egypt - 2012", "Uzbekistan - 2011", "Yemen - 2013"), selected = "Algeria - 2014"),
+#         
+#                 ggvisOutput("trust_plot")
+#         ))#,
+# 
+#         server = function(input, output) {
+#                 load("wvs.app.RData")
+#                 datasetInput <- reactive({
+#                         selection <- switch(input$yr,
+#                                    "Algeria - 2014" = "Algeria - 2014", "Azerbaijan - 2011/2012" = "Azerbaijan - 2011/2012", "Armenia - 2011" = "Armenia - 2011",  "Belarus - 2011" = "Belarus - 2011", "China - 2012" = "China - 2012", "Palestine - 2013" = "Palestine - 2013", "Iraq - 2013" = "Iraq - 2013", "Kazakhstan - 2011" = "Kazakhstan - 2011", "Jordan - 2014" = "Jordan - 2014", "Kuwait - 2013" = "Kuwait - 2013", "Libya - 2013" = "Libya - 2013", "Malaysia - 2011" = "Malaysia - 2011", "Morocco - 2011" = "Morocco - 2011", "Nigeria - 2011" = "Nigeria - 2011", "Qatar - 2010" = "Qatar - 2010", "Russia - 2011" = "Russia - 2011", "Rwanda - 2012" = "Rwanda - 2012", "Singapore - 2012" = "Singapore - 2012", "Zimbabwe - 2011" = "Zimbabwe - 2011", "Egypt - 2012" = "Egypt - 2012", "Uzbekistan - 2011" = "Uzbekistan - 2011", "Yemen - 2013" = "Yemen - 2013")
+#                         subset(data_predict, countryyr == selection)         
+#                 
+#                 })
+#         
+#         gv <- reactive({
+#                 ggvis(datasetInput(), props(x = ~age, y = ~predictedprob))  %>% 
+#                                 layer_lines()
+# #                               layer_lines(stroke= ~category)  #%>% 
+# #                               #layer_ribbons(y = ~LL, y2 = ~UL))
+#                 
+#         })
+#         output$controls <- renderControls(gv)
+#         observe_ggvis(gv, "trust_plot")      
+#         }
+# #)
+# 
+# 
+#```
+
+
+#```{r, echo=FALSE}
 rm(list = ls())
 library(shiny)
 library(ggvis)
-setwd("C:/Dropbox/Projects/Dissertation/WVS/trust.app")
-#shinyApp(
+#setwd("C:/Dropbox/Projects/Dissertation/WVS/trust.app")
+
+#create data for test
+set.seed(99)
+test <- data.frame(matrix(nrow = 348, ncol = 5))
+colnames(test) <- c("age", "uni", "hs", "countryyr")
+test$age <- rep(seq(from = 18, to = 75, by = 1), 6)
+test$uni <- rep(c(1,0,0,1,0,0), each = 58)
+test$hs <- rep(c(0, 1, 0,0,1,0), each = 58)
+test$category <- rep(c("College", "HS", "Low Edu", "College", "HS", "Low Edu"), each = 58)
+test$countryyr <- rep(c("u", "z"), each = 174)
+test$predictedprob <- ifelse(test$uni == 1, (test$age - 18)*0.01, ifelse(test$hs == 1, (test$age - 18)*0.015, (test$age - 15)*0.015))
+test$predictedprob <- ifelse(test$countryyr == "z", test$predictedprob- 0.15, test$predictedprob)
+test$LL <- test$predictedprob - 0.2
+test$UL <- test$predictedprob + 0.2
+                          
+
+shinyApp(
         ui = fluidPage(
-                inputPanel(selectInput("cyr", label = "Choose a country:",choices = c("Algeria - 2014", "Azerbaijan - 2011/2012", "Armenia - 2011",  "Belarus - 2011", "China - 2012", "Palestine - 2013", "Iraq - 2013", "Kazakhstan - 2011", "Jordan - 2014", "Kuwait - 2013", "Libya - 2013", "Malaysia - 2011", "Morocco - 2011", "Nigeria - 2011", "Qatar - 2010", "Russia - 2011", "Rwanda - 2012", "Singapore - 2012", "Zimbabwe - 2011", "Egypt - 2012", "Uzbekistan - 2011", "Yemen - 2013"), selected = "Algeria - 2014"),
+                inputPanel(selectInput("cyr", label = "Choose a country:",choices = c("u" = "u", "z", "z"),
         
                 ggvisOutput("trust_plot")
-        ))#,
+        )),
 
         server = function(input, output) {
                 load("wvs.app.RData")
                 datasetInput <- reactive({
                         selection <- switch(input$yr,
-                                   "Algeria - 2014" = "Algeria - 2014", "Azerbaijan - 2011/2012" = "Azerbaijan - 2011/2012", "Armenia - 2011" = "Armenia - 2011",  "Belarus - 2011" = "Belarus - 2011", "China - 2012" = "China - 2012", "Palestine - 2013" = "Palestine - 2013", "Iraq - 2013" = "Iraq - 2013", "Kazakhstan - 2011" = "Kazakhstan - 2011", "Jordan - 2014" = "Jordan - 2014", "Kuwait - 2013" = "Kuwait - 2013", "Libya - 2013" = "Libya - 2013", "Malaysia - 2011" = "Malaysia - 2011", "Morocco - 2011" = "Morocco - 2011", "Nigeria - 2011" = "Nigeria - 2011", "Qatar - 2010" = "Qatar - 2010", "Russia - 2011" = "Russia - 2011", "Rwanda - 2012" = "Rwanda - 2012", "Singapore - 2012" = "Singapore - 2012", "Zimbabwe - 2011" = "Zimbabwe - 2011", "Egypt - 2012" = "Egypt - 2012", "Uzbekistan - 2011" = "Uzbekistan - 2011", "Yemen - 2013" = "Yemen - 2013")
-                        subset(data_predict, countryyr == selection)         
+                                   "u" = "u", "z" = "z")
+                        subset(test, countryyr == selection)         
                 
                 })
         
@@ -58,7 +111,7 @@ setwd("C:/Dropbox/Projects/Dissertation/WVS/trust.app")
         output$controls <- renderControls(gv)
         observe_ggvis(gv, "trust_plot")      
         }
-#)
+)
 
 
 ```

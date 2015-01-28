@@ -30,7 +30,8 @@ for (c in 1:length(countries)) {
         #build data set of predicted values
         p <- data.frame(matrix(nrow = 174, ncol = 8))
         colnames(p) <- c("countryyr", "sex", "age", "uni", "hs", "income", "unemp", "polinterestd")
-        p$countryyr <- d[1, "country.year"] 
+        p$countryyr <- d[1, "country.year"]
+        p$cyr_n <- c
         p$sex <- 2
         p$age <- seq(from = 18, to = 75, by = 1)
         p$uni <- rep(c(1, 0, 0), each = 58)
@@ -38,7 +39,7 @@ for (c in 1:length(countries)) {
         p$income <- mean(d$income, na.rm = TRUE)
         p$unemp <- 0
         p$polinterestd <- ifelse(mean(d$polinterestd, na.rm = TRUE) > 0.5, 1, 0)
-        p$category <- rep(c("College", "High School", "> High School"), each = 58)
+        p$category <- rep(c("College", "High School", "< High School"), each = 58)
         
         p2 <- cbind(p, predict(m, newdata = p, type = "link", se = TRUE))
         
@@ -53,6 +54,7 @@ for (c in 1:length(countries)) {
         } else data_predict <- rbind(data_predict, p2)
         
 }
+data_predict$category <- factor(data_predict$category, levels = c("College", "High School", "< High School"))
 
 write.csv(data_predict, file = "20141209_data_forapp.csv")
 save(data_predict, file = "wvs.app.RData")

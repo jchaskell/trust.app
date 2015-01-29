@@ -1,12 +1,10 @@
 #This file creates the data for the shiny app
 
 #packages
-library(plyr)
 library(dplyr)
-library(ggvis)
 
 #read in WVS data
-setwd("C:/Dropbox/Projects/Dissertation/WVS/trust.app")
+setwd("~/trust.app")
 wvs <- read.csv(file = "wvs_20141208.csv", stringsAsFactors = FALSE)
 
 list <- read.csv(file = "WVSw6_list.csv", stringsAsFactors = FALSE)
@@ -57,4 +55,4 @@ for (c in 1:length(countries)) {
 data_predict$category <- factor(data_predict$category, levels = c("College", "High School", "< High School"))
 
 write.csv(data_predict, file = "20141209_data_forapp.csv")
-save(data_predict, file = "wvs.app.RData")
+#save(data_predict, file = "wvs.app.RData")

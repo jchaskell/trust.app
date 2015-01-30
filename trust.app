@@ -7,12 +7,12 @@ runtime: shiny
 
 CHECK ESTIMATES
 
-We know a lot about the relationship between basic demographic and socio-economic variables and political outcomes, such as political participation and trust in the government, in the United States and other developed democracies. However, we know a lot less about predictors of political beliefs in authoritarian regimes. 
+We know a lot about the relationship between basic demographic and socio-economic variables and political outcomes, such as political participation and trust in the government, in the United States and other developed democracies. However, we know a lot less about predictors of political beliefs in authoritarian regimes. I am especially interested in 
 In exploring 
 
 I created this app using data from the latest round of the [World Values Survey](http://www.worldvaluessurvey.org/WVSDocumentationWV6.jsp), which was conducted in more than 50 countries between 2011 and 2014. I include the 21 countries with non-democratic governments. I plot the predicted probability that someone will trust the government by age and by level of education. The solid lines represent the averages, and the colored ribbons around the lines represent the 95% confidence intervals (see below for discussion of other control variables used).
 
-In many countries, there are not significant differences in how much people trust the government across education levels. 
+In many countries, there are not significant differences in how much people trust the government across education levels (check out Nigeria for example). 
 In others, like Kuwait, China, and Morrocco, 
 
 [Description]

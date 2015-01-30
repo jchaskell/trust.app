@@ -1,0 +1,85 @@
+---
+title: "Trust in Authoritarian Regimes"
+author: 
+output: html_document
+runtime: shiny
+---
+
+We know a lot about the relationship between basic demographic and socio-economic variables and political outcomes, such as political participation and trust in the government, in the United States and other developed democracies. However, we know a lot less about predictors of political beliefs in authoritarian regimes. I am especially interested in what explains how much people trust or believe the authoritarian state and the effects of education and cohort on trust across different countries. In the process of exploring cross-country data on trust, I decided to also learn how to use `shiny` and create an interactive interface for looking at the data, which is much easier than flipping through .png files.
+
+I created this app using data from the latest round of the [World Values Survey](http://www.worldvaluessurvey.org/WVSDocumentationWV6.jsp), which was conducted in more than 50 countries between 2011 and 2014. I include the 22 countries with non-democratic governments. I plot the predicted probability that someone will trust the government by age and by level of education. The solid lines represent the averages, and the colored ribbons around the lines represent the 95% confidence intervals (see below for discussion of other control variables used).
+
+In many countries, there are not significant differences in how much people trust the government across education levels (check out Morocco, for example).  In countries like China, Belarus, and Jordan, those with a college education are less likely to have confidence in the state, which is what we would expect if education increases support for democracy. In Rwanda, the order is reversed, with college-educated people having more confidence in the government.
+
+### Education, Age, and Trust in the State
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+trust <- function() {
+library(shiny)
+library(ggplot2)
+library(devtools)
+shinyApp(
+        ui = fluidPage(fluidRow(
+                        column(8,
+                                selectInput("countryyr", label = "Choose a country:", 
+                                c("Algeria - 2014" = 1, "Azerbaijan - 2011/2012" = 2, 
+                                "Armenia - 2011" = 3,  "Belarus - 2011" = 4, "China - 2012" = 5, 
+                                "Palestine - 2013" = 6, "Iraq - 2013" = 7, "Kazakhstan - 2011" = 8, 
+                                "Jordan - 2014"= 9, "Kuwait - 2013" = 10, "Libya - 2013" = 11, 
+                                "Malaysia - 2011" = 12, "Morocco - 2011" = 13, "Nigeria - 2011" = 4,
+                                "Qatar - 2010" = 15, "Russia - 2011" = 16, "Rwanda - 2012" = 17, 
+                                "Singapore - 2012" = 18, "Zimbabwe - 2011" = 19, "Egypt - 2012" = 20,
+                                "Uzbekistan - 2011" = 21, "Yemen - 2013" = 22), selected = 1))),
+                             
+                mainPanel(
+                        #uiOutput("ggvis_ui"),
+                        plotOutput('plot')
+                  ), responsive = FALSE),
+
+        server = function(input, output) {
+        #source_gist("4466237")
+        
+        data_predict <- read.csv("20141209_data_forapp.csv")
+        output$plot <- renderPlot(function(){
+                 selection <- input$countryyr      
+#                 selection <- switch(input$countryyr,
+#                                     "Algeria - 2014" = "Algeria - 2014", "Azerbaijan - 2011/2012" = "Azerbaijan - 2011/2012", "Armenia - 2011" = "Armenia - 2011",  "Belarus - 2011" = "Belarus - 2011", "China - 2012" = "China - 2012", "Palestine - 2013" = "Palestine - 2013", "Iraq - 2013" = "Iraq - 2013", "Kazakhstan - 2011" = "Kazakhstan - 2011", "Jordan - 2014" = "Jordan - 2014", "Kuwait - 2013" = "Kuwait - 2013", "Libya - 2013" = "Libya - 2013", "Malaysia - 2011" = "Malaysia - 2011", "Morocco - 2011" = "Morocco - 2011", "Nigeria - 2011" = "Nigeria - 2011", "Qatar - 2010" = "Qatar - 2010", "Russia - 2011" = "Russia - 2011", "Rwanda - 2012" = "Rwanda - 2012", "Singapore - 2012" = "Singapore - 2012", "Zimbabwe - 2011" = "Zimbabwe - 2011", "Egypt - 2012" = "Egypt - 2012", "Uzbekistan - 2011" = "Uzbekistan - 2011", "Yemen - 2013" = "Yemen - 2013")
+#                 
+                data <- subset(data_predict, cyr_n == input$countryyr) 
+                data$category <- factor(data$category, levels = c("College", "High School", "< High School"))
+
+                p <- ggplot(data, aes(x =age, y = predictedprob)) + 
+                        theme_bw() +
+                         theme(#axis.line = element_line(colour = "black"),
+                                #plot.background = element_blank(),
+#                               panel.grid.minor= element_blank(),
+#                               panel.grid.major.x = element_blank(),
+#                               panel.grid.major.y = element_blank(),
+                              panel.border = element_blank(),
+                              panel.background = element_blank()) +  
+                        geom_ribbon(aes(ymin = LL, ymax = UL, fill = category), alpha = 0.2) + 
+                        geom_line(aes(color = category), size = 1.2) +
+                        xlab("Age") + ylab("Probability of Trust")
+                print(p)
+                
+        })
+        
+            
+}, options = list(height = 500, width = "100%"))
+
+}
+
+trust()
+```
+
+
+### Data and Model
+To determine whether a country is authoritarian or not, I use the classification system described by [Cheibub, Gandhi, and Vreeland](https://sites.google.com/site/joseantoniocheibub/datasets/democracy-and-dictatorship-revisited). I model trust in the state using logistic regression, with a separate model for each country. To measure trust, I use the survey question "How much confidence do you have in the government (in your nation's capital)? A great deal, quite a lot, not very much, or none at all?" The former two are counted as trusting the state, while the latter two are counted as not trusting.
+
+In addition to age and level of education, I use the following regressors: income (measured in deciles by country), gender, unemployment status, and political interest. The plots are for an employed female with average income. The level of political interest is set at 0 (not interested in politics) or 1 (interested in politics), depending on whether the country's average is above 0.5. Go [here](https://github.com/jchaskell/trust.app/blob/master/create.app.Rmd) for the R Markdown file that creates the app and go [here](https://github.com/jchaskell/trust.app/blob/master/create.data.R) for the R file that runs the models and generates predicted probabilities(though it doesn't start from the raw data).
+
+One might be concerned that people will not respond truthfully when asked their opinion of the government in a non-democratic country. Most of the places where the survey was conducted allow enough freedom of expression for people to be willing to say how much they trust the state, though this is certainly less true in the most repressive regimes like Uzbekistan. In cases where people are afraid of reprisals for responding honestly, fear may also bias within country comparisons if more educated people are less afraid than those with less education.
+
+Note: this is meant as a preliminary model - more of a first pass of the data. 
+
+
+
